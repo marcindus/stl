@@ -10,6 +10,13 @@ bool cmp(double first, double second, double epsilon = 0.5) {
     return (fabs(first - second) < epsilon);
 }
 
+TEST(parserTest, shoultParseIntegers)
+{
+    std::vector<std::string> v={"5", "+", "11"};
+    ASSERT_EQ(parse(" 5+ 11  "), v);
+}
+
+/*
 TEST(advancedCalculatorTest, ShouldAdd) {
     double result = 0;
 
@@ -194,3 +201,4 @@ TEST(advancedCalculatorTest, ShouldReturnSqrtOfNegativeNumber) {
     ASSERT_EQ(process("-123.2 $ 1", &result), ErrorCode::SqrtOfNegativeNumber);
     ASSERT_EQ(process("-123 $ 1", &result), ErrorCode::SqrtOfNegativeNumber);
 }
+*/

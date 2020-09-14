@@ -2,10 +2,34 @@
 #include <functional>
 #include <map>
 #include <stdexcept>
-
+#include <iostream>
+#include <regex>
+#include <stdlib.h> 
 #include "advancedCalculator.hpp"
 
+std::vector<std::string>  parse(const std::string& input) {
 
+    std::regex double_reg("\\s*([-+]?[0-9]*\\.[0-9]+|[0-9]+)\\s*" "\\s*([-+*$])\\s*" "\\s*([-+]?[0-9]*\\.[0-9]+|[0-9]+)\\s*");
+
+    std::smatch match_result;
+    std::vector<std::string > result;
+
+
+    if (std::regex_match(input, match_result, double_reg)) 
+    {
+      auto match_iter = match_result.begin();
+      
+      for (std::advance(match_iter, 1); match_iter != match_result.end(); advance(match_iter, 1))
+      {
+          result.push_back(*match_iter);
+      }
+
+      return result;
+
+    } 
+    std::cout << "No match!" << std::endl;
+    return result;
+}
 
 
 ErrorCode process(std::string input, double* out)
@@ -16,18 +40,19 @@ ErrorCode process(std::string input, double* out)
     char oper;
     double b;
 
+    std::cout << "a " << a << " b " << b <<  " oper" << oper << "\n";
 
     std::function<double(double,double)> minus_ = [a,b](double a,double b){return a-b;}; 
-    operations.at('-') = minus_;
+    operations['-'] = minus_;
 
     std::function<double(double,double)> plus_ = [a,b](double a,double b){return a+b;}; 
-    operations.at('+') = plus_;
+    operations['+'] = plus_;
 
     std::function<double(double,double)> multipl_ = [a,b](double a,double b){return a*b;}; 
-    operations.at('-') = multipl_;
+    operations['-'] = multipl_;
 
     std::function<double(double,double)> divide_ = [a,b](double a,double b){return a/b;}; 
-    operations.at('/') = divide_;
+    operations['/'] = divide_;
 
     std::stringstream ss;
     ss << input;

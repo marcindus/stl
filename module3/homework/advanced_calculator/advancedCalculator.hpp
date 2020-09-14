@@ -10,3 +10,6 @@ enum class ErrorCode {
 };
 
 ErrorCode process(std::string input, double *out);
+
+
+std::vector<std::string>  parse(const std::string& input);
