@@ -28,8 +28,6 @@ TEST_P(Parse, ShouldParseArrays)
     EXPECT_EQ(parse(GetParam().input_), GetParam().result_);
 }
 
-std::vector<std::string> v{"5", "+", "1"};
-
 INSTANTIATE_TEST_SUITE_P(ParseTest,
                          Parse,
                          ::testing::Values(
@@ -41,9 +39,17 @@ INSTANTIATE_TEST_SUITE_P(ParseTest,
                              TestData("-99999.000015 * 1",  {"-99999.000015", "*", "1"}),
                              TestData("-99999.000015 $-1",  {"-99999.000015", "$", "-1"}),
                              TestData("-99999.000015 --1",  {"-99999.000015", "-", "-1"}),
-                             TestData("-99999.000015 - 1",  {"-99999.000015", "-", "1"}),
-                             TestData("-99999.000015* -1",  {"-99999.000015", "*", "-1"}),
-                             TestData("15$-11",  {"15", "$", "-11"})
+                             TestData("-.000015 - 1",  {"-.000015", "-", "1"}),
+                             TestData("-99999* -1",  {"-99999", "*", "-1"}),
+                             TestData("15$-11",  {"15", "$", "-11"}),
+                             TestData("11!",  {"11", "!"}),
+                             TestData("  11  !",  {"11", "!"}),
+                             TestData(" 11!  ",  {"11", "!"}),
+                             TestData(" 6.7!  ",  {"6.7", "!"}),
+                             TestData(" 6.732131!  ",  {"6.732131", "!"}),
+                             TestData("-11!  ",  {"-11", "!"}),
+                             TestData("-11.32131!  ",  {"-11.32131", "!"})
+
                                            ));
 
 
@@ -138,7 +144,7 @@ TEST(advancedCalculatorTest, ShouldCalculateSqrt) {
     ASSERT_EQ(process("2.5 $ 2.5", &result), ErrorCode::OK);
     EXPECT_TRUE(cmp(result, 1.4427));
 }
-/*
+
 TEST(advancedCalculatorTest, ShouldModulo) {
     double result = 0;
 
@@ -158,6 +164,8 @@ TEST(advancedCalculatorTest, ShouldModulo) {
     EXPECT_TRUE(cmp(result, 14.0));
 }
 
+
+
 TEST(advancedCalculatorTest, ShouldFactorial) {
     double result = 0;
 
@@ -172,7 +180,7 @@ TEST(advancedCalculatorTest, ShouldFactorial) {
     ASSERT_EQ(process("-12.4!", &result), ErrorCode::OK);
     EXPECT_TRUE(cmp(result, 1));
 }
-
+/*
 TEST(advancedCalculatorTest, ShouldReturnBadFormat) {
     double result = 0;
 

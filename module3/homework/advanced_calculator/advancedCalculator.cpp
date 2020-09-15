@@ -1,82 +1,73 @@
-#include <sstream>
-#include <functional>
-#include <map>
-#include <stdexcept>
-#include <iostream>
-#include <regex>
-#include <stdlib.h>
-#include <math.h>
 #include "advancedCalculator.hpp"
+#include <functional>
+#include <iostream>
+#include <map>
+#include <math.h>
+#include <regex>
+#include <sstream>
+#include <stdexcept>
+#include <stdlib.h>
 
-std::vector<std::string>  parse(const std::string& input) {
+std::vector<std::string> parse(const std::string &input) {
 
+  std::regex command("\\s*([-+]?[0-9]*\\.[0-9]+|[+-]?[0-9]+)\\s*"
+                     "\\s*([-+*$/^%]{1})\\s*"
+                     "\\s*([-+]?[0-9]*\\.[0-9]+|[-]?[0-9]+)\\s*");
 
+  std::regex command_factorial("\\s*([-+]?[0-9]*\\.[0-9]+|[+-]?[0-9]+)\\s*" "\\s*(\\!)\\s*");
 
-    std::regex double_reg("\\s*([-+]?[0-9]*\\.[0-9]+|[+-]?[0-9]+)\\s*" "\\s*([-+*$/^%]{1})\\s*" "\\s*([-+]?[0-9]*\\.[0-9]+|[-]?[0-9]+)\\s*");
-//    std::regex double_reg("\\s*([-+]?[0-9]+)\\s*" "\\s*([-+*$])\\s*" "\\s*([-+]?[0-9]+)\\s*");
+  std::smatch match_result;
+  std::vector<std::string> result;
 
-    std::smatch match_result;
-    std::vector<std::string > result;
+  if (std::regex_match(input, match_result, command)) {
+    auto match_iter = match_result.begin();
 
-
-    if (std::regex_match(input, match_result, double_reg))
-    {
-      auto match_iter = match_result.begin();
-
-      for (std::advance(match_iter, 1); match_iter != match_result.end(); advance(match_iter, 1))
-      {
-          result.push_back(*match_iter);
-      }
-
-      return result;
-
+    for (std::advance(match_iter, 1); match_iter != match_result.end();
+         advance(match_iter, 1)) {
+      result.push_back(*match_iter);
     }
-    std::cout << "No match!" << std::endl;
+
     return result;
+
+  } else if (std::regex_match(input, match_result, command_factorial)) {
+    auto match_iter = match_result.begin();
+    for (std::advance(match_iter, 1); match_iter != match_result.end();
+         advance(match_iter, 1)) {
+      result.push_back(*match_iter);
+    }
+    return result;
+  }
+
+  std::cout << "No match!" << std::endl;
+  return result;
 }
 
+ErrorCode process(std::string input, double *out) {
+  std::map<std::string, std::function<double(double, double)>> operations;
+  std::vector<std::string> parsed = parse(input);
 
-ErrorCode process(std::string input, double* out)
-{
-    std::map<std::string, std::function<double(double,double)> > operations;
-    std::vector<std::string> parsed = parse(input);
+  double a = atof(parsed[0].c_str());
+  std::string oper = parsed[1];
+  double b = atof(parsed[2].c_str());
 
-    double a = atof(parsed[0].c_str());
-    std::string oper = parsed[1];
-    double b = atof(parsed[2].c_str());
-
-
-    std::function<double(double,double)> minus_ = [a,b](double a,double b){return a-b;};
-    operations["-"] = minus_;
-
-    std::function<double(double,double)> plus_ = [a,b](double a,double b){return a+b;};
-    operations["+"] = plus_;
-
-    std::function<double(double,double)> multipl_ = [a,b](double a,double b){return a*b;};
-    operations["*"] = multipl_;
-
-    std::function<double(double,double)> divide_ = [a,b](double a,double b){return a/b;};
-    operations["/"] = divide_;
-
-    std::function<double(double,double)> power_ = [a,b](double a,double b){return pow(a,b);};
-    operations["^"] = power_;
-
-    std::function<double(double,double)> sqrt_ = [a,b](double a,double b){return pow(a,1/b);};
-    operations["$"] = sqrt_;
+  operations["-"] = [a, b](double a, double b) { return a - b; };
+  operations["+"] = [a, b](double a, double b) { return a + b; };
+  operations["*"] = [a, b](double a, double b) { return a * b; };
+  operations["/"] = [a, b](double a, double b) { return a / b; };
+  operations["^"] = [a, b](double a, double b) { return pow(a, b); };
+  operations["%"] = [a, b](double a, double b) { return (int)a % (int)b; }; //!!!!!
+  operations["$"] = [a, b](double a, double b) { return pow(a, 1 / b); };
+  operations["!"] = [a, b](double a, double b) { return a; };
 
 
 
-    try
-    {
-        *out =  operations.at(oper)(a,b);
+  try {
+    *out = operations.at(oper)(a, b);
+    //        std::cout << "a " << a << " b " << b <<  " oper" << oper <<
+    //        "result " << *out << "\n";
+  } catch (const std::out_of_range &ex) {
+    return ErrorCode::BadCharacter;
+  }
 
-//        std::cout << "a " << a << " b " << b <<  " oper" << oper << "result " << *out << "\n";
-    }
-    catch (const std::out_of_range& ex)
-    {
-        return ErrorCode::BadCharacter;
-    }
-
-    return ErrorCode::OK;
-
+  return ErrorCode::OK;
 }

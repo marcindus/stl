@@ -1,4 +1,5 @@
 #include <string>
+#include <vector>
 
 enum class ErrorCode {
   BadCharacter,
