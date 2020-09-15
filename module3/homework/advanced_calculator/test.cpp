@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <cmath>
 #include <vector>
-
+#include <string>
 #include "advancedCalculator.hpp"
 
 #include "gtest/gtest.h"
@@ -10,13 +10,44 @@ bool cmp(double first, double second, double epsilon = 0.5) {
     return (fabs(first - second) < epsilon);
 }
 
-TEST(parserTest, shoultParseIntegers)
+struct TestData
 {
-    std::vector<std::string> v={"5", "+", "11"};
-    ASSERT_EQ(parse(" 5+ 11  "), v);
+    TestData(std::string input, std::vector<std::string> result)
+        : input_{input}, result_{result} {};
+
+    std::string input_;
+    std::vector<std::string> result_;
+};
+
+class Parse : public ::testing::TestWithParam<TestData>
+{
+};
+
+TEST_P(Parse, ShouldParseArrays)
+{
+    EXPECT_EQ(parse(GetParam().input_), GetParam().result_);
 }
 
-/*
+std::vector<std::string> v{"5", "+", "1"};
+
+INSTANTIATE_TEST_SUITE_P(ParseTest,
+                         Parse,
+                         ::testing::Values(
+                             TestData("5+1",  {"5", "+", "1"}),
+                             TestData("5 $ 1 ",  {"5", "$", "1"}),
+                             TestData("5+-1 ",  {"5", "+", "-1"}),
+                             TestData("-5 +-1  ",  {"-5", "+", "-1"}),
+                             TestData("5$-1 ",  {"5", "$", "-1"}),
+                             TestData("-99999.000015 * 1",  {"-99999.000015", "*", "1"}),
+                             TestData("-99999.000015 $-1",  {"-99999.000015", "$", "-1"}),
+                             TestData("-99999.000015 --1",  {"-99999.000015", "-", "-1"}),
+                             TestData("-99999.000015 - 1",  {"-99999.000015", "-", "1"}),
+                             TestData("-99999.000015* -1",  {"-99999.000015", "*", "-1"}),
+                             TestData("15$-11",  {"15", "$", "-11"})
+                                           ));
+
+
+
 TEST(advancedCalculatorTest, ShouldAdd) {
     double result = 0;
 
@@ -31,6 +62,7 @@ TEST(advancedCalculatorTest, ShouldAdd) {
     ASSERT_EQ(process("-11.230 + -77.321", &result), ErrorCode::OK);
     EXPECT_TRUE(cmp(result, -88.551));
 }
+
 
 TEST(advancedCalculatorTest, ShouldSubstract) {
     double result = 0;
@@ -106,7 +138,7 @@ TEST(advancedCalculatorTest, ShouldCalculateSqrt) {
     ASSERT_EQ(process("2.5 $ 2.5", &result), ErrorCode::OK);
     EXPECT_TRUE(cmp(result, 1.4427));
 }
-
+/*
 TEST(advancedCalculatorTest, ShouldModulo) {
     double result = 0;
 
