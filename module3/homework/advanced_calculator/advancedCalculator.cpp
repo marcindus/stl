@@ -46,6 +46,7 @@ ErrorCode parse(const std::string& input, std::vector<std::string>& result)
     }
     else if (std::regex_match(input, match_result, command_factorial))
     { // fix me - copy pasta, here shoul be done conversion to double
+
         auto match_iter = match_result.begin();
         for (std::advance(match_iter, 1); match_iter != match_result.end(); advance(match_iter, 1))
         {
@@ -57,10 +58,12 @@ ErrorCode parse(const std::string& input, std::vector<std::string>& result)
     return ErrorCode::BadFormat;
 }
 
+
 ErrorCode process(std::string input, double* out)
 {
     std::map<std::string, std::function<double(double, double)>> operations;
     std::vector<std::string> parsed{};
+
     ErrorCode status_ = parse(input, parsed);
 
     if(status_ != ErrorCode::OK) return status_;
@@ -96,7 +99,7 @@ ErrorCode process(std::string input, double* out)
         if (b == 0)
         {
             throw AmountException("blah blah", ErrorCode::DivideBy0);
-            return 0.0; // Why!
+            return 0.0; 
         }
         return a / b;
     };
@@ -124,7 +127,7 @@ ErrorCode process(std::string input, double* out)
     };
 
     operations["!"] = [a, b](double a, double b) {
-        return a; };
+        return tgamma(a+1); };
 
     try
     {
