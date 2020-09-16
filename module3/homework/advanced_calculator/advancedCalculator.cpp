@@ -21,10 +21,13 @@ const char* AmountException::what() const throw()
 
 ErrorCode parse(const std::string& input, std::vector<std::string>& result)
 {
+//    std::regex bad_characters("![a-zA-Z]|![@#&]");
+//    if(std::regex_match(input, bad_characters)) return ErrorCode::BadCharacter;
 
     std::regex command("\\s*([-+]?[0-9]*\\.[0-9]+|[+-]?[0-9]+)\\s*"
                        "\\s*([-+*$/^%]{1})\\s*"
                        "\\s*([-+]?[0-9]*\\.[0-9]+|[-]?[0-9]+)\\s*");
+
 
     std::regex command_factorial("\\s*([-+]?[0-9]*\\.[0-9]+|[+-]?[0-9]+)\\s*"
                                  "\\s*(\\!)\\s*");
@@ -78,7 +81,7 @@ ErrorCode process(std::string input, double* out)
         oper = parsed[1];
         b = atof(parsed[2].c_str());
     }
-    else 
+    else
     {
        return  ErrorCode::BadFormat;
     }
@@ -126,7 +129,7 @@ ErrorCode process(std::string input, double* out)
     try
     {
         *out = operations.at(oper)(a, b);
-        std::cout << "a " << a << " b " << b << " oper" << oper << "result " << *out << "\n";
+//        std::cout << "a " << a << " b " << b << " oper" << oper << "result " << *out << "\n";
     }
     catch (const std::out_of_range& ex)
     {
