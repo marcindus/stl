@@ -36,6 +36,8 @@ INSTANTIATE_TEST_SUITE_P(ParseTest,
                                            TestData("5 $ 1 ", {"5", "$", "1"}),
                                            TestData("5+-1 ", {"5", "+", "-1"}),
                                            TestData("-5 +-1  ", {"-5", "+", "-1"}),
+                                           TestData("-  5 +-   1  ", {"-5", "+", "-1"}),
+                                           TestData("-5 +-   1  ", {"-5", "+", "-1"}),
                                            TestData("5$-1 ", {"5", "$", "-1"}),
                                            TestData("-99999.000015 * 1", {"-99999.000015", "*", "1"}),
                                            TestData("-99999.000015 $-1", {"-99999.000015", "$", "-1"}),
@@ -196,6 +198,8 @@ TEST(advancedCalculatorTest, ShouldReturnBadFormat)
     ASSERT_EQ(process("-12.4! + 2", &result), ErrorCode::BadFormat);
     ASSERT_EQ(process("11 / 13.4+", &result), ErrorCode::BadFormat);
     ASSERT_EQ(process("+8 - 32.1", &result), ErrorCode::BadFormat);
+    ASSERT_EQ(process("8 - +32.1", &result), ErrorCode::BadFormat);
+    ASSERT_EQ(process("+8 - +32.1", &result), ErrorCode::BadFormat);
     ASSERT_EQ(process("12 ^% 3", &result), ErrorCode::BadFormat);
     ASSERT_EQ(process("+ 3 4", &result), ErrorCode::BadFormat);
     ASSERT_EQ(process("12.4.3 + 12.3", &result), ErrorCode::BadFormat);
@@ -250,3 +254,4 @@ TEST(advancedCalculatorTest, ShouldReturnSqrtOfNegativeNumber)
     ASSERT_EQ(process("-123.2 $ 1", &result), ErrorCode::SqrtOfNegativeNumber);
     ASSERT_EQ(process("-123 $ 1", &result), ErrorCode::SqrtOfNegativeNumber);
 }
+

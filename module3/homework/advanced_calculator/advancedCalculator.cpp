@@ -8,11 +8,12 @@
 #include <stdexcept>
 #include <stdlib.h>
 
-AmountException::AmountException(std::string p_msg, ErrorCode errorCode_) : logic_error(p_msg), errorCode(errorCode_)
+CalculationException::CalculationException(std::string p_msg, ErrorCode errorCode_)
+    : logic_error(p_msg), errorCode(errorCode_)
 {
 }
 
-const char* AmountException::what() const throw()
+const char* CalculationException::what() const throw()
 {
     std::ostringstream o;
     o << logic_error::what();
@@ -21,20 +22,20 @@ const char* AmountException::what() const throw()
 
 ErrorCode parse(const std::string& input, std::vector<std::string>& result)
 {
-//    std::regex bad_characters("![a-zA-Z]|![@#&]");
-//    if(std::regex_match(input, bad_characters)) return ErrorCode::BadCharacter;
 
-    std::regex command("\\s*([-+]?[0-9]*\\.[0-9]+|[+-]?[0-9]+)\\s*"
-                       "\\s*([-+*$/^%]{1})\\s*"
-                       "\\s*([-+]?[0-9]*\\.[0-9]+|[-]?[0-9]+)\\s*");
+    if (input.find_first_not_of("0123456789-+*$/^%!., ") != std::string::npos)
+        return ErrorCode::BadCharacter;
 
+    std::regex command("\\s*(-?\\s*[0-9]+*\\.[0-9]+|-?\\s*[0-9]+)\\s*" // match int or double with or w/o minus sign
+                       "\\s*([^!])\\s*" //   "match one char except ! and zero or more spaces
+                       "\\s*(-?\\s*[0-9]+*\\.[0-9]+|-?\\s*[0-9]+)\\s*");
 
-    std::regex command_factorial("\\s*([-+]?[0-9]*\\.[0-9]+|[+-]?[0-9]+)\\s*"
+    std::regex command_factorial("\\s*([-]?[0-9]*\\.[0-9]+|[+-]?[0-9]+)\\s*"
                                  "\\s*(\\!)\\s*");
 
     std::smatch match_result;
 
-    if (std::regex_match(input, match_result, command))
+    if (std::regex_match(input, match_result, command) or std::regex_match(input, match_result, command_factorial))
     {
         auto match_iter = match_result.begin();
 
@@ -42,22 +43,15 @@ ErrorCode parse(const std::string& input, std::vector<std::string>& result)
         {
             result.push_back(*match_iter);
         }
-        return ErrorCode::OK;
-    }
-    else if (std::regex_match(input, match_result, command_factorial))
-    { // fix me - copy pasta, here shoul be done conversion to double
-
-        auto match_iter = match_result.begin();
-        for (std::advance(match_iter, 1); match_iter != match_result.end(); advance(match_iter, 1))
+        for (std::string& str : result)
         {
-            result.push_back(*match_iter);
+            str.erase(remove(str.begin(), str.end(), ' '), str.end());
         }
         return ErrorCode::OK;
     }
 
     return ErrorCode::BadFormat;
 }
-
 
 ErrorCode process(std::string input, double* out)
 {
@@ -66,13 +60,14 @@ ErrorCode process(std::string input, double* out)
 
     ErrorCode status_ = parse(input, parsed);
 
-    if(status_ != ErrorCode::OK) return status_;
+    if (status_ != ErrorCode::OK)
+        return status_;
 
     double a = 0;
     double b = 0;
     std::string oper;
 
-    if(parsed.size() == 2)
+    if (parsed.size() == 2)
     {
         a = atof(parsed[0].c_str());
         oper = parsed[1];
@@ -86,31 +81,27 @@ ErrorCode process(std::string input, double* out)
     }
     else
     {
-       return  ErrorCode::BadFormat;
+        return ErrorCode::BadFormat;
     }
 
-    operations["-"] = [a, b](double a, double b) {
-        return a - b; };
-    operations["+"] = [a, b](double a, double b) {
-        return a + b; };
-    operations["*"] = [a, b](double a, double b) {
-        return a * b; };
+    operations["-"] = [a, b](double a, double b) { return a - b; };
+    operations["+"] = [a, b](double a, double b) { return a + b; };
+    operations["*"] = [a, b](double a, double b) { return a * b; };
     operations["/"] = [a, b](double a, double b) {
         if (b == 0)
         {
-            throw AmountException("blah blah", ErrorCode::DivideBy0);
-            return 0.0; 
+            throw CalculationException("Divide By Zero", ErrorCode::DivideBy0);
+            return 0.0;
         }
         return a / b;
     };
 
-    operations["^"] = [a, b](double a, double b) {
-        return pow(a, b); };
+    operations["^"] = [a, b](double a, double b) { return pow(a, b); };
 
     operations["%"] = [a, b](double a, double b) {
         if (((int)a - a) != 0 or (int) b - b != 0)
         {
-            throw AmountException("blah blah", ErrorCode::ModuleOfNonIntegerValue);
+            throw CalculationException("Module of Non Integer", ErrorCode::ModuleOfNonIntegerValue);
         }
 
         return (int)a % (int)b;
@@ -119,7 +110,7 @@ ErrorCode process(std::string input, double* out)
     operations["$"] = [a, b](double a, double b) {
         if (a < 0)
         {
-            throw AmountException("blah blah", ErrorCode::SqrtOfNegativeNumber);
+            throw CalculationException("Sqrt of Negative Number", ErrorCode::SqrtOfNegativeNumber);
             return 0.0;
         }
 
@@ -127,18 +118,21 @@ ErrorCode process(std::string input, double* out)
     };
 
     operations["!"] = [a, b](double a, double b) {
-        return tgamma(a+1); };
+        if (a < 0)
+            return 1.0;
+        return tgamma(a + 1.0);
+    };
 
     try
     {
         *out = operations.at(oper)(a, b);
-//        std::cout << "a " << a << " b " << b << " oper" << oper << "result " << *out << "\n";
+        //        std::cout << "a " << a << " b " << b << " oper" << oper << "result " << *out << "\n";
     }
     catch (const std::out_of_range& ex)
     {
         return ErrorCode::BadCharacter;
     }
-    catch (const AmountException& ex)
+    catch (const CalculationException& ex)
     {
         return ex.errorCode;
     }
