@@ -16,7 +16,8 @@ enum class ErrorCode
 
 ErrorCode process(std::string input, double* out);
 
-ErrorCode parse(const std::string& input, std::vector<std::string>& result);
+
+ErrorCode parse(const std::string& input, double& a, double& b, std::string& oper);
 
 class CalculationException : public std::logic_error
 {

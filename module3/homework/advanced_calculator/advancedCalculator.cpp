@@ -20,14 +20,16 @@ const char* CalculationException::what() const throw()
     return o.str().c_str();
 }
 
-ErrorCode parse(const std::string& input, std::vector<std::string>& result)
+ErrorCode parse(const std::string& input, double& a, double& b, std::string& oper)
 {
 
     if (input.find_first_not_of("0123456789-+*$/^%!., ") != std::string::npos)
         return ErrorCode::BadCharacter;
 
+    std::vector<std::string> result;
+
     std::regex command("\\s*(-?\\s*[0-9]+*\\.[0-9]+|-?\\s*[0-9]+)\\s*" // match int or double with or w/o minus sign
-                       "\\s*([^!])\\s*" //   "match one char except ! and zero or more spaces
+                       "\\s*([^!])\\s*"                                // match one char except ! and zero or more spaces
                        "\\s*(-?\\s*[0-9]+*\\.[0-9]+|-?\\s*[0-9]+)\\s*");
 
     std::regex command_factorial("\\s*([-]?[0-9]*\\.[0-9]+|[+-]?[0-9]+)\\s*"
@@ -47,42 +49,33 @@ ErrorCode parse(const std::string& input, std::vector<std::string>& result)
         {
             str.erase(remove(str.begin(), str.end(), ' '), str.end());
         }
+
+        if (result.size() == 2)
+        {
+            a = atof(result[0].c_str());
+            oper = result[1];
+        }
+
+        else if (result.size() == 3)
+        {
+            a = atof(result[0].c_str());
+            oper = result[1];
+            b = atof(result[2].c_str());
+        }
         return ErrorCode::OK;
     }
-
     return ErrorCode::BadFormat;
 }
 
 ErrorCode process(std::string input, double* out)
 {
+    double a = 0.0;
+    double b = 0.0;
+    std::string oper{};
+    ErrorCode status = parse(input,a,b,oper);
+    if(status != ErrorCode::OK) return status;
+
     std::map<std::string, std::function<double(double, double)>> operations;
-    std::vector<std::string> parsed{};
-
-    ErrorCode status_ = parse(input, parsed);
-
-    if (status_ != ErrorCode::OK)
-        return status_;
-
-    double a = 0;
-    double b = 0;
-    std::string oper;
-
-    if (parsed.size() == 2)
-    {
-        a = atof(parsed[0].c_str());
-        oper = parsed[1];
-    }
-
-    else if (parsed.size() == 3)
-    {
-        a = atof(parsed[0].c_str());
-        oper = parsed[1];
-        b = atof(parsed[2].c_str());
-    }
-    else
-    {
-        return ErrorCode::BadFormat;
-    }
 
     operations["-"] = [a, b](double a, double b) { return a - b; };
     operations["+"] = [a, b](double a, double b) { return a + b; };
@@ -126,7 +119,6 @@ ErrorCode process(std::string input, double* out)
     try
     {
         *out = operations.at(oper)(a, b);
-        //        std::cout << "a " << a << " b " << b << " oper" << oper << "result " << *out << "\n";
     }
     catch (const std::out_of_range& ex)
     {

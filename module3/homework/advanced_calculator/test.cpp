@@ -13,10 +13,12 @@ bool cmp(double first, double second, double epsilon = 0.5)
 
 struct TestData
 {
-    TestData(std::string input, std::vector<std::string> result) : input_{input}, result_{result} {};
+    TestData(std::string input_, double a_, std::string oper_, double b_ ) : input{input_}, a{a_}, oper{oper_},  b{b_}{};
 
-    std::string input_;
-    std::vector<std::string> result_;
+    std::string input;
+    double a;
+    double b;
+    std::string oper;
 };
 
 class Parse : public ::testing::TestWithParam<TestData>
@@ -25,34 +27,37 @@ class Parse : public ::testing::TestWithParam<TestData>
 
 TEST_P(Parse, ShouldParseArrays)
 {
-    std::vector<std::string> vec;
-    parse(GetParam().input_, vec);
-    EXPECT_EQ(vec, GetParam().result_);
+    double a = 0;
+    double b = 0;
+    std::string oper_;
+    parse(GetParam().input, a, b, oper_);
+    EXPECT_EQ(a, GetParam().a);
+    EXPECT_EQ(b, GetParam().b);
+    EXPECT_EQ(oper_, GetParam().oper);
 }
 
 INSTANTIATE_TEST_SUITE_P(ParseTest,
                          Parse,
-                         ::testing::Values(TestData("5+1", {"5", "+", "1"}),
-                                           TestData("5 $ 1 ", {"5", "$", "1"}),
-                                           TestData("5+-1 ", {"5", "+", "-1"}),
-                                           TestData("-5 +-1  ", {"-5", "+", "-1"}),
-                                           TestData("-  5 +-   1  ", {"-5", "+", "-1"}),
-                                           TestData("-5 +-   1  ", {"-5", "+", "-1"}),
-                                           TestData("5$-1 ", {"5", "$", "-1"}),
-                                           TestData("-99999.000015 * 1", {"-99999.000015", "*", "1"}),
-                                           TestData("-99999.000015 $-1", {"-99999.000015", "$", "-1"}),
-                                           TestData("-99999.000015 --1", {"-99999.000015", "-", "-1"}),
-                                           TestData("-.000015 - 1", {"-.000015", "-", "1"}),
-                                           TestData("-99999* -1", {"-99999", "*", "-1"}),
-                                           TestData("15$-11", {"15", "$", "-11"}),
-                                           TestData("11!", {"11", "!"}),
-                                           TestData("  11  !", {"11", "!"}),
-                                           TestData(" 11!  ", {"11", "!"}),
-                                           TestData(" 6.7!  ", {"6.7", "!"}),
-                                           TestData(" 6.732131!  ", {"6.732131", "!"}),
-                                           TestData("-11!  ", {"-11", "!"}),
-                                           TestData("-11.32131!  ", {"-11.32131", "!"})
-
+                         ::testing::Values(TestData("5+1", 5, "+", 1),
+                                           TestData("5 $ 1 ", 5, "$", 1),
+                                           TestData("5+-1 ", 5, "+", -1),
+                                           TestData("-5 +-1  ", -5, "+", -1),
+                                           TestData("-  5 +-   1  ", -5, "+", -1),
+                                           TestData("-5 +-   1  ", -5, "+", -1),
+                                           TestData("5$-1 ", 5, "$", -1),
+                                           TestData("-99999.000015 * 1", -99999.000015, "*", 1),
+                                           TestData("-99999.000015 $-1", -99999.000015, "$", -1),
+                                           TestData("-99999.000015 --1", -99999.000015, "-", -1),
+                                           TestData("-.000015 - 1", -.000015, "-", 1),
+                                           TestData("-99999* -1", -99999, "*", -1),
+                                           TestData("15$-11", 15, "$", -11),
+                                           TestData("11!", 11, "!", 0.0),
+                                           TestData("  11  !", 11, "!", 0.0),
+                                           TestData(" 11!  ", 11, "!", 0.0),
+                                           TestData(" 6.7!  ", 6.7, "!", 0.0),
+                                           TestData(" 6.732131!  ", 6.732131, "!", 0.0),
+                                           TestData("-11!  ", -11, "!", 0.0),
+                                           TestData("-11.32131!  ", -11.32131, "!", 0.0)
                                                ));
 
 TEST(advancedCalculatorTest, ShouldAdd)
